@@ -70,3 +70,40 @@ Execute the standard Terraform lifecycle commands sequentially (wait for each to
    ```bash
    terraform apply
    ```
+
+### 🏗️ Architecture Overview
+The project follows an **Edge-to-Cloud** architecture:
+- **Edge (Local/Mac Studio):** Real-time physics simulation (Digital Twin), Message Brokering (Kafka), and Local Analytics (TimescaleDB + Grafana).
+- **Cloud (GCP):** Long-term cold storage (GCS) and Data Warehousing (BigQuery) orchestrated via Terraform.
+
+---
+
+### 🟢 Sprint 1: The Physical Digital Twin (Python & Physics)
+Development of a high-fidelity simulation script (`gemelo_digital.py`) that models a real PV plant in **Badajoz, Spain**.
+
+- **Physical Modeling:** Implemented using `pvlib`, utilizing the **CEC Module database** (Canadian Solar 400W) and **Sandia Inverter database** (SMA Sunny Central).
+- **Live Data Ingestion:** - Real-time weather data (DNI, DHI, Temp, Wind) via **Open-Meteo API**.
+    - Spot market prices (€/MWh) via **ESIOS OMIE API**.
+- **Edge Logic:** Continuous 60-second loop calculating Plane of Array (POA) irradiance and AC power output based on real-time environmental conditions.
+
+### 🔵 Sprint 2: Streaming Infrastructure (Docker & Kafka)
+Deployment of the local processing backbone using a containerized environment optimized for macOS.
+
+- **Orchestration:** Transitioned from Docker Desktop to **OrbStack** for high-performance, low-latency container management.
+- **Components:**
+    - **Apache Kafka (KRaft):** Single-node cluster for high-throughput message streaming without Zookeeper overhead.
+    - **TimescaleDB:** Time-series optimized PostgreSQL for storing generation and pricing logs.
+    - **Grafana:** Real-time dashboarding for the Digital Twin's telemetry.
+- **Health Checks:** Implemented `depends_on` conditions and automated health checks to ensure sub-second reliability between services.
+
+---
+
+## 🛠️ Tech Stack
+- **Languages:** Python (Pandas, pvlib, Requests).
+- **Infrastructure:** Docker, OrbStack, Terraform.
+- **Streaming:** Apache Kafka.
+- **Storage:** TimescaleDB, Google Cloud Storage, BigQuery.
+- **Observability:** Grafana.
+
+## 🔜 Next Steps (Sprint 3)
+- Developing the **PySpark Structured Streaming** engine to implement the "Smart Curtailment" logic: automatically shutting down virtual inverters when market prices turn negative to protect revenue.
